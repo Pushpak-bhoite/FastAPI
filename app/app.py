@@ -4,6 +4,12 @@ from app.schemas import PostCreate, PostResponse
 from app.db import Post, FilePost, get_db
 FilePost
 from sqlalchemy import select 
+import shutil
+import os
+import uuid
+import tempfile
+from imagekitio import ImageKit
+from app.images import imagekit
 
 app = FastAPI()
 
@@ -51,18 +57,51 @@ async def upload_file(
     caption: str = Form("") ,
     db: Session = Depends(get_db)
     ):
+    # -------- upload image -------
+    # create temp file
+    temp_file_path= None
+    print('file->', file)
+    try:
+        with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(file.filename)[1]) as temp_file:
+            print('temp_file->', temp_file)
+            print('temp_file.name->', temp_file.name)
+            temp_file_path = temp_file.name
+            shutil.copyfileobj(file.file, temp_file)
+            print(f"File properties:")
+            print(f"Filename: {file.filename}")
+            print(f"Content type: {file.content_type}")
+            print(f"Size: {file.size}")
+            print("file>>", file)
+        # Upload from file
+        response = imagekit.files.upload(
+            file=open(temp_file_path,"rb"),
+            file_name=file.filename,
+            folder="/products",
+            tags=["product", "featured"]
+        )
+        print(f"File ID: {response.file_id}")
+        print(f"URL: {response.url}")
+        
+        # ---------------
     
-    db_post = FilePost(
-        caption=caption, 
-        url="dummy url",
-        file_type="photo",
-        file_name="dummy name"
-    )
-    db.add(db_post)
-    db.commit()
-    db.refresh(db_post)
-    return db_post
+        db_post = FilePost(
+            caption=caption, 
+            url=response.url,
+            file_type="photo",
+            file_name="dummy name"
+        )
+        db.add(db_post)
+        db.commit()
+        db.refresh(db_post)
+        return db_post
 
+    except Exception as e:
+        print('e->', e)
+        raise HTTPException(status_code=500, detail=f"Upload failed: {str(e)}")
+    finally:
+        # Clean up temp file
+        if temp_file_path and os.path.exists(temp_file_path):
+            os.remove(temp_file_path)
 
 @app.get("/feed")
 async def get_feed(
@@ -71,7 +110,7 @@ async def get_feed(
     # result =  db.execute(select(FilePost).order_by(FilePost.created_At.desc())) # this code will work with async await
     # posts = [row[0] for row in result.all()]
     posts = db.query(FilePost).order_by(FilePost.created_At.desc()).all()
-    
+        
     posts_data =[]
     for post in posts:
         posts_data.append(
