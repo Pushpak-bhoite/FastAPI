@@ -1,6 +1,7 @@
 from pydantic import BaseModel #this is a object 
 from datetime import date
-
+from fastapi_users import schemas
+import uuid
 class PostCreate(BaseModel):
     title:str
     content: str
@@ -23,3 +24,12 @@ class FilePost(BaseModel):
     created_At: date
     class Config: 
         from_attributes = True 
+        
+class UserRead(schemas.BaseUser[uuid.UUID]):
+    pass
+
+class UserCreate(schemas.BaseUserCreate):
+    pass
+
+class UserUpdate(schemas.BaseUserUpdate):
+    pass

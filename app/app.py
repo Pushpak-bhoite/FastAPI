@@ -1,15 +1,15 @@
 from fastapi import FastAPI, HTTPException, Depends, File, Form, UploadFile 
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.schemas import PostCreate, PostResponse
-from app.db import Post, FilePost, create_db_and_tables, get_db
+from contextlib import asynccontextmanager
+from app.images import imagekit
+from app.schemas import PostCreate, PostResponse, UserRead, UserCreate, UserUpdate
+from app.db import Post, FilePost, User, create_db_and_tables, get_db
 from sqlalchemy import select 
 import shutil
 import os
 import uuid
 import tempfile
-from imagekitio import ImageKit
-from app.images import imagekit
-from contextlib import asynccontextmanager
+from app.users import auth_backend, current_active_user, fastapi_users
 
 
 @asynccontextmanager
@@ -18,6 +18,13 @@ async def lifespan(app: FastAPI):
     yield
 
 app = FastAPI(lifespan=lifespan)
+
+# connect diff auth endpoints that we need to our fast API users endpoints. 
+app.include_router(fastapi_users.get_auth_router(auth_backend), prefix='/auth/jwt', tags=["auth"])
+app.include_router(fastapi_users.get_register_router(UserRead, UserCreate), prefix='/auth', tags=["auth"])
+app.include_router(fastapi_users.get_reset_password_router(), prefix='/auth', tags=["auth"])
+app.include_router(fastapi_users.get_verify_router(UserRead), prefix='/auth', tags=["auth"])
+app.include_router(fastapi_users.get_users_router(UserRead, UserUpdate), prefix='/users', tags=["users"])
 
 #### My posts dummy
 # @app.get("/")

@@ -4,17 +4,20 @@ import uuid
 from datetime import datetime
 from collections.abc import AsyncGenerator
 
-from sqlalchemy import Column, String, DateTime, Text
+from fastapi import Depends
+from sqlalchemy import Column, ForeignKey, String, DateTime, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
-from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy.orm import DeclarativeBase, relationship
+#for user 
+from fastapi_users.db import SQLAlchemyUserDatabase, SQLAlchemyBaseUserTableUUID
+
 
 # Async SQLite URL
 DATABASE_URL = "sqlite+aiosqlite:///./app.db"
 
 # Engine
 engine = create_async_engine(DATABASE_URL, echo=True)
-
 # Session maker
 async_session_maker = async_sessionmaker(engine, expire_on_commit=False)
 
@@ -34,19 +37,25 @@ class Post(Base):
     caption = Column(String)
 
 
+class User(SQLAlchemyBaseUserTableUUID, Base): ###################***
+    File_Posts = relationship("FilePost", back_populates="user")
+    
 class FilePost(Base):
     __tablename__ = "file_posts"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    # make relationship with User as FK (makes one to many relation)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("user.id"),  nullable=False)
     caption = Column(Text)
     url = Column(String, nullable=False)
     file_type = Column(String, nullable=False)
     file_name = Column(String, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
+    # Connects tables 
+    user = relationship("User", back_populates="File_Posts")
     
     
 # call this on app startup
-
 async def create_db_and_tables():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
@@ -54,3 +63,10 @@ async def create_db_and_tables():
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
     async with async_session_maker() as session:
         yield session
+
+async def get_user_db(session: AsyncSession = Depends(get_db)):
+    yield SQLAlchemyUserDatabase(session, User)
+    
+    
+    
+# whats yield
