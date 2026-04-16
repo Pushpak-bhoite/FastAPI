@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, 
+from fastapi import FastAPI, HTTPException
 from sqlalchemy.orm import Session
 from app.schemas import PostCreate, PostResponse
 

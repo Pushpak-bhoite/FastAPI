@@ -1,52 +1,56 @@
-# sqlAlchemy - is a orm for python 
+# db.py
 
-from sqlalchemy import create_engine, Column, Integer, String, DateTime
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+import uuid
 from datetime import datetime
+from collections.abc import AsyncGenerator
 
-# SQLite database setup
-SQLALCHEMY_DATABASE_URL = "sqlite:///./app.db"
+from sqlalchemy import Column, String, DateTime, Text
+from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
+from sqlalchemy.orm import DeclarativeBase
 
-# Create engine
-engine = create_engine(
-    SQLALCHEMY_DATABASE_URL, 
-    connect_args={"check_same_thread": False}  # Needed for SQLite
-)
+# Async SQLite URL
+DATABASE_URL = "sqlite+aiosqlite:///./app.db"
 
-# Create SessionLocal class
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+# Engine
+engine = create_async_engine(DATABASE_URL, echo=True)
 
-# Create Base class for models
-Base = declarative_base()
+# Session maker
+async_session_maker = async_sessionmaker(engine, expire_on_commit=False)
 
-# Post model
+
+# Base class (new style)
+class Base(DeclarativeBase):
+    pass
+
+
+# Models
 class Post(Base):
     __tablename__ = "posts"
-    
-    id = Column(Integer, primary_key=True, index=True)
+
+    id = Column(String, primary_key=True, index=True)  # simpler than UUID for now
     title = Column(String, index=True)
     content = Column(String)
-    caption = Column(String) ###############
+    caption = Column(String)
+
 
 class FilePost(Base):
     __tablename__ = "file_posts"
 
-    id= Column(Integer, primary_key=True, index=True)
-    caption = Column(String)
-    url = Column(String)
-    file_type= Column(String)
-    file_name = Column(String)
-    created_At= Column(DateTime, default=datetime.utcnow)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    caption = Column(Text)
+    url = Column(String, nullable=False)
+    file_type = Column(String, nullable=False)
+    file_name = Column(String, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    
+# call this on app startup
 
-
-# Create tables
-Base.metadata.create_all(bind=engine)
-
-# Dependency to get database session
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+async def create_db_and_tables():
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+        
+async def get_db() -> AsyncGenerator[AsyncSession, None]:
+    async with async_session_maker() as session:
+        yield session
