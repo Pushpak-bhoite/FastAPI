@@ -14,7 +14,7 @@ from fastapi_users.db import SQLAlchemyUserDatabase, SQLAlchemyBaseUserTableUUID
 
 
 # Async SQLite URL
-DATABASE_URL = "sqlite+aiosqlite:///./app.db"
+DATABASE_URL = "sqlite+aiosqlite:///./test.db"
 
 # Engine
 engine = create_async_engine(DATABASE_URL, echo=True)

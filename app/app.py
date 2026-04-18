@@ -20,57 +20,34 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 
 # connect diff auth endpoints that we need to our fast API users endpoints. 
-app.include_router(fastapi_users.get_auth_router(auth_backend), prefix='/auth/jwt', tags=["auth"])
-app.include_router(fastapi_users.get_register_router(UserRead, UserCreate), prefix='/auth', tags=["auth"])
-app.include_router(fastapi_users.get_reset_password_router(), prefix='/auth', tags=["auth"])
-app.include_router(fastapi_users.get_verify_router(UserRead), prefix='/auth', tags=["auth"])
-app.include_router(fastapi_users.get_users_router(UserRead, UserUpdate), prefix='/users', tags=["users"])
+app.include_router(fastapi_users.get_auth_router(auth_backend), prefix='/auth/jwt', tags=["auth - 1"])
+app.include_router(fastapi_users.get_register_router(UserRead, UserCreate), prefix='/auth', tags=["auth - 2"])
+app.include_router(fastapi_users.get_reset_password_router(), prefix='/auth', tags=["auth - 3"])
+app.include_router(fastapi_users.get_verify_router(UserRead), prefix='/auth', tags=["auth - 4 "])
+app.include_router(fastapi_users.get_users_router(UserRead, UserUpdate), prefix='/users', tags=["users - 5"])
 
-#### My posts dummy
-# @app.get("/")
+#### My posts dummy 
+# @app.get("/") 
 # def hello_world_function():
 #     return {"message":"Hello World"}
 
-# # Create a new post
-# @app.post("/posts", response_model=PostResponse, status_code=201)
-# def create_post(post: PostCreate, db: Session = Depends(get_db)): ### im trying to add caption field here
-#     db_post = Post(title=post.title, content=post.content, caption=post.caption)
-#     db.add(db_post)
-#     db.commit()
-#     db.refresh(db_post)
-#     return db_post
+from sqlalchemy import select
 
-# # Get all posts
-# @app.get("/posts", response_model=PostResponse)
-# def get_all_posts(db: Session = Depends(get_db)):
-#     posts = db.query(Post).all()
-#     return posts
-
-# # Get a specific post by ID
-# @app.get("/post/{id}")
-# def get_post(id: int, db: Session = Depends(get_db)):
-#     post = db.query(Post).filter(Post.id == id).first()
-#     if not post:
-#         raise HTTPException(status_code=404, detail="Post not found")
-#     return post
-
-# @app.delete("/post/{id}", status_code=204)
-# def delete_post(id: int, db: Session = Depends(get_db)):
-#     post = db.query(Post).filter(Post.id == id).first()
-#     if not post:
-#          raise HTTPException(status=404, detail="Post not found")
-#     db.delete(post)
-#     db.commit()
-#     return {"message": "Post deleted successfully"}
+@app.get("/users", tags=["All users"])
+async def get_all_users(
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(current_active_user)
+):
+    result = await db.execute(select(User))
+    users = result.scalars().all()
     
-### Code with images 
-# Create a new post
+    return users
 
-
-@app.post("/upload")
+@app.post("/upload",tags=["upload file hahah"])
 async def upload_file(
     file: UploadFile = File(...),
     caption: str = Form("") ,
+    user: User = Depends(current_active_user),
     db: AsyncSession = Depends(get_db)
     ):
     # -------- upload image -------
@@ -96,10 +73,11 @@ async def upload_file(
         # ---------------
     
         db_post = FilePost(
-            caption=caption, 
-            url=response.url,
-            file_type="video" if file.content_type.startswith("video/") else "image",
-            file_name= response.name
+            user_id = user.id,
+            caption = caption, 
+            url = response.url,
+            file_type = "video" if file.content_type.startswith("video/") else "image",
+            file_name = response.name
         )
         db.add(db_post)
         await db.commit()
@@ -117,7 +95,8 @@ async def upload_file(
 
 @app.get("/feed")
 async def get_feed(
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(current_active_user)
 ):
     result = await db.execute(select(FilePost).order_by(FilePost.created_at.desc()))
     posts = result.scalars().all()
@@ -132,13 +111,17 @@ async def get_feed(
                 "file_type": post.file_type,
                 "file_name": post.file_name,
                 "created_at": post.created_at.isoformat(),
+                "is_owner": post.user_id == user.id,
+                "email": post.user.email
             }
         )
         
     return {"posts": posts_data}
 
 @app.delete("/posts/{post_id}")
-async def delete_post(post_id: str, db: AsyncSession = Depends(get_db)):
+async def delete_post(post_id: str,
+                      db: AsyncSession = Depends(get_db),
+                      user: User = Depends(current_active_user),):
     try:
         post_uuid = uuid.UUID(post_id)
         
@@ -147,6 +130,9 @@ async def delete_post(post_id: str, db: AsyncSession = Depends(get_db)):
         
         if not post:
             raise HTTPException(status_code=404, detail="Post not found")
+        
+        if post.user_id != user.id:
+            raise HTTPException(status_code=403, delete="You don't have permission to delete the post ")
         
         await db.delete(post)
         await db.commit()

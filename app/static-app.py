@@ -43,3 +43,39 @@ def create_post(post: PostCreate)-> PostResponse:
     text_posts[max(text_posts.keys()) + 1] = new_post
     return new_post
 
+
+# # Create a new post
+# @app.post("/posts", response_model=PostResponse, status_code=201)
+# def create_post(post: PostCreate, db: Session = Depends(get_db)): ### im trying to add caption field here
+#     db_post = Post(title=post.title, content=post.content, caption=post.caption)
+#     db.add(db_post)
+#     db.commit()
+#     db.refresh(db_post)
+#     return db_post
+
+# # Get all posts
+# @app.get("/posts", response_model=PostResponse)
+# def get_all_posts(db: Session = Depends(get_db)):
+#     posts = db.query(Post).all()
+#     return posts
+
+# # Get a specific post by ID
+# @app.get("/post/{id}")
+# def get_post(id: int, db: Session = Depends(get_db)):
+#     post = db.query(Post).filter(Post.id == id).first()
+#     if not post:
+#         raise HTTPException(status_code=404, detail="Post not found")
+#     return post
+
+# @app.delete("/post/{id}", status_code=204)
+# def delete_post(id: int, db: Session = Depends(get_db)):
+#     post = db.query(Post).filter(Post.id == id).first()
+#     if not post:
+#          raise HTTPException(status=404, detail="Post not found")
+#     db.delete(post)
+#     db.commit()
+#     return {"message": "Post deleted successfully"}
+    
+### Code with images 
+# Create a new post
+
