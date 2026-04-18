@@ -12,7 +12,7 @@ from fastapi_users.authentication import (
 )
 
 from fastapi_users.db import SQLAlchemyUserDatabase
-from app.db import User, get_user_db
+from app.core.db import User, get_user_db
 
 SECRET ="PushpakSecret"
 
@@ -38,7 +38,7 @@ async def get_user_manager(user_db: SQLAlchemyUserDatabase =Depends(get_user_db)
 bearer_transport = BearerTransport(tokenUrl="auth/jwt/login")
 
 def get_jwt_strategy():
-    return JWTStrategy(secret=SECRET, lifetime_seconds=36 * 1000 )
+    return JWTStrategy(secret=SECRET, lifetime_seconds=36 * 10000 )
 
 auth_backend = AuthenticationBackend(
     name="jwt", 
