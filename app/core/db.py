@@ -39,6 +39,7 @@ class Post(Base):
 
 class User(SQLAlchemyBaseUserTableUUID, Base): ###################***
     File_Posts = relationship("FilePost", back_populates="user")
+    assets = relationship("Asset", back_populates="user")
     
 class FilePost(Base):
     __tablename__ = "file_posts"
@@ -53,6 +54,23 @@ class FilePost(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     # Connects tables 
     user = relationship("User", back_populates="File_Posts")
+
+
+class Asset(Base):
+    __tablename__ = "assets"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name = Column(String, nullable=False, index=True)
+    asset_type = Column(String, nullable=False)  # "http", "ssl", "ping", "port", "dns"
+    target = Column(String, nullable=False)  # URL/domain/IP
+    port = Column(String, nullable=True)
+    status = Column(String, default="unknown")  # "up", "down", "unknown"
+    last_checked_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("user.id"), nullable=False)
+    
+    user = relationship("User", back_populates="assets")
     
     
 # call this on app startup
@@ -68,5 +86,3 @@ async def get_user_db(session: AsyncSession = Depends(get_db)):
     yield SQLAlchemyUserDatabase(session, User)
     
     
-    
-# whats yield
