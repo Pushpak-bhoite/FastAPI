@@ -1,0 +1,45 @@
+I wan to integrate permitio in my fatsapi project so give me instructtion how can i get it done step by step (since IDK how Permit.io works )
+this isfast api current user model
+
+```json
+  {
+    "is_active": true,
+    "is_verified": false,
+    "id": "d972bb13-4d63-4ba6-99d9-cfe7e3e7ae7f",
+    "email": "bran@example.com",
+    "hashed_password": "$argon2id$v=19$m=65536,t=3,p=4$GHDW0920dvtzizp9ci1D0g$8GZBTtJK4MLd1ES5Xa3FxegfN4C2xGNRkpylhDcW+qw",
+    "is_superuser": false
+  }
+```
+
+And schema im expecting for my model.
+ 
+Organization = {
+  id,
+  organizationType: "assetwatch" | "customer" | "reseller" | "reseller_customer",
+  organizationName,
+  organizationEmail,
+  parentOrganizationId: null | organization_id,
+  createdAt,
+  updatedAt
+}
+ 
+so basically assetWatch user is kind of super user who can delete, create, read, update anyone.
+Reseller can create create its own customers, which can be deleted by himself or by assetWatch.
+customer & reseller_customer is the actual user who can CRUD the asset. (nothing else)
+ 
+ 
+in this
+Organization = {
+  id,
+  organizationType: "assetwatch" | "customer" | "reseller" | "reseller_customer",
+  organizationName,
+  organizationEmail,
+  parentOrganizationId: null | organization_id,
+  createdAt,
+  updatedAt
+}
+so we need kind of RBAC in this app
+you'll understand this as we move further why i have created roles like this, since it's futuristic - every role will be having sub roles like engineer, finance, admin. We are not considering it right now.
+
+Keep good commenting so devs can understand code. 
