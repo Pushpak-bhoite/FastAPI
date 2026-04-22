@@ -151,7 +151,7 @@ async def main():
     print("Next steps:")
     print("1. Register a user via the API (POST /auth/register)")
     print("2. Run this script with --assign-user flag to make them admin:")
-    print("   python scripts/setup_initial_org.py --assign-user admin@example.com")
+    print("   python scripts/setup_initial_org.py --assign-user bran@assetwatch.com")
     print()
 
 
