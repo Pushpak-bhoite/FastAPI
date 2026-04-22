@@ -6,13 +6,20 @@ This module defines all SQLAlchemy models for the AssetWatch system.
 Based on Wanaware's asset management architecture.
 
 Models:
+- Organization: Multi-tenant organization model with hierarchical support
 - Post: Simple blog posts (kept for backwards compatibility)
-- User: User authentication via fastapi-users
+- User: User authentication via fastapi-users (now with organization membership)
 - FilePost: File uploads linked to users
 - Asset: Network/compute/security assets to monitor
 - Monitor: Performance or Availability monitors attached to assets
 - PerformanceMetric: CPU, Memory, Disk I/O, Latency data
 - AvailabilityMetric: Status, Response Time, Uptime data
+
+Organization Types & Permissions:
+- assetwatch: Super admin - can CRUD all organizations
+- reseller: Can CRUD their own reseller_customers, read/update self
+- customer: Direct customer - can read/update self only
+- reseller_customer: Reseller's customer - can read/update self only
 """
 
 import uuid
@@ -42,6 +49,77 @@ class Base(DeclarativeBase):
     pass
 
 
+# ==================== ORGANIZATION MODEL (for multi-tenant RBAC) ====================
+
+class Organization(Base):
+    """
+    Organization model for multi-tenant RBAC (Role-Based Access Control).
+    
+    This is the core model for permission management. Each user belongs to an organization,
+    and the organization type determines their permissions.
+    
+    Organization Types:
+    - assetwatch: Super admin organization (only one should exist)
+                  Can CRUD all customers, resellers, and their data
+    - reseller: Partner organization that can manage their own customers
+                Can CRUD their own reseller_customers, read/update self
+    - customer: Direct customer of AssetWatch
+                Can read/update self only
+    - reseller_customer: Customer created by a reseller
+                         Can read/update self only
+    
+    Hierarchy:
+    - assetwatch (top level, parent_organization_id = null)
+      ├── customer (parent_organization_id = null, direct customer)
+      └── reseller (parent_organization_id = null)
+          └── reseller_customer (parent_organization_id = reseller.id)
+    """
+    __tablename__ = "organizations"
+
+    # Primary key - UUID for better security
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    
+    # Organization type determines permissions
+    # Valid values: "assetwatch", "customer", "reseller", "reseller_customer"
+    organization_type = Column(
+        String, 
+        nullable=False,
+        index=True,
+        comment="One of: assetwatch, customer, reseller, reseller_customer"
+    )
+    
+    # Human-readable organization name
+    organization_name = Column(String, nullable=False, index=True)
+    
+    # Contact email for the organization (must be unique)
+    organization_email = Column(String, nullable=False, unique=True)
+    
+    # Parent organization for hierarchy support
+    # - null for assetwatch, customer, reseller (top-level orgs)
+    # - reseller.id for reseller_customer (child of reseller)
+    parent_organization_id = Column(
+        UUID(as_uuid=True), 
+        ForeignKey("organizations.id"), 
+        nullable=True,
+        comment="Parent org ID - set for reseller_customer, null for others"
+    )
+    
+    # Timestamps for auditing
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Self-referential relationship for parent/children
+    parent = relationship(
+        "Organization", 
+        remote_side=[id], 
+        backref="children",
+        foreign_keys=[parent_organization_id]
+    )
+    
+    # Users belonging to this organization
+    users = relationship("User", back_populates="organization")
+
+
 # ==================== EXISTING MODELS (kept for backwards compatibility) ====================
 
 class Post(Base):
@@ -58,7 +136,21 @@ class User(SQLAlchemyBaseUserTableUUID, Base):
     """
     User model extending fastapi-users base.
     Contains relationships to all user-owned resources.
+    
+    Now includes organization membership for multi-tenant RBAC.
+    The user's permissions are determined by their organization's type.
     """
+    # Organization membership - links user to their organization
+    # This determines what the user can access based on org type
+    organization_id = Column(
+        UUID(as_uuid=True), 
+        ForeignKey("organizations.id"), 
+        nullable=True,  # Nullable initially - can be set after user creation
+        comment="Organization this user belongs to"
+    )
+    organization = relationship("Organization", back_populates="users")
+    
+    # Existing relationships
     File_Posts = relationship("FilePost", back_populates="user")
     assets = relationship("Asset", back_populates="user")  # User's assets
     
