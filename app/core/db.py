@@ -116,8 +116,7 @@ class Organization(Base):
         foreign_keys=[parent_organization_id]
     )
     
-    # Users belonging to this organization
-    users = relationship("User", back_populates="organization")
+    # NOTE: User IS now the organization, so no users relationship needed here
 
 
 # ==================== EXISTING MODELS (kept for backwards compatibility) ====================
@@ -134,40 +133,21 @@ class Post(Base):
 
 class User(SQLAlchemyBaseUserTableUUID, Base):
     """
-    User model extending fastapi-users base.
-    also represents an organization (user IS the organization).
-    
-    Now includes organization membership for multi-tenant RBAC.
-    The user's permissions are determined by their organization's type.
+    User model - User IS the Organization.
+    user.id = org_id, user.email = org_email, user.name = org_name
     """
-    # Organization membership - links user to their organization
-    # This determines what the user can access based on org type
-    organization_id = Column(
-        UUID(as_uuid=True), 
-        ForeignKey("organizations.id"), 
-        nullable=True,  # Nullable initially - can be set after user creation
-        comment="Organization this user belongs to"
-    )
-    # User's display name (also used as organization_name)
+    # Display name (also serves as organization_name)
     name = Column(String, nullable=False, default="")
-    # Default always as customer of super admin
-    organization_type = Column(
-        String, 
-        nullable=False, 
-        default="customer", 
-        index=True,
-        comment="One of: assetwatch, customer, reseller, reseller_customer" )
-    parent_organization_id = Column(
-        UUID(as_uuid=True),
-        ForeignKey("user.id"),
-        nullable=True
-    )
-
-    # organization = relationship("Organization", back_populates="users")
     
-    # Existing relationships
+    # Role: assetwatch, customer, reseller, reseller_customer
+    organization_type = Column(String, nullable=False, default="customer", index=True)
+    
+    # Parent org (for reseller_customer → points to reseller's user.id)
+    parent_organization_id = Column(UUID(as_uuid=True), ForeignKey("user.id"), nullable=True)
+    
+    # Relationships
     File_Posts = relationship("FilePost", back_populates="user")
-    assets = relationship("Asset", back_populates="user")  # User's assets
+    assets = relationship("Asset", back_populates="user")
     
 
 class FilePost(Base):
