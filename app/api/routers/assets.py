@@ -88,6 +88,7 @@ from app.core.db import (
     PerformanceMetric, AvailabilityMetric
 )
 from app.users import current_active_user
+from app.api.dependencies import check_permission
 from app.schemas import (
     AssetCreate, AssetResponse, AssetUpdate, AssetDetailResponse,
     PerformanceMonitorCreate, AvailabilityMonitorCreate,
@@ -286,7 +287,12 @@ def calculate_uptime_percentage(
 # ==================== ASSET CRUD ENDPOINTS ====================
 
 
-@router.post("/", response_model=AssetResponse, status_code=201)
+@router.post(
+    "/",
+    response_model=AssetResponse,
+    status_code=201,
+    dependencies=[Depends(check_permission("create", "asset"))]
+)
 async def create_asset(
     asset: AssetCreate,
     db: AsyncSession = Depends(get_db),
@@ -339,7 +345,11 @@ async def create_asset(
     }
 
 
-@router.get("/", response_model=list[AssetResponse])
+@router.get(
+    "/",
+    response_model=list[AssetResponse],
+    dependencies=[Depends(check_permission("read", "asset"))]
+)
 async def get_all_assets(
     db: AsyncSession = Depends(get_db),
     user: User = Depends(current_active_user)
@@ -597,7 +607,11 @@ async def get_dashboard_stats(
     }
 
 
-@router.get("/{asset_id}", response_model=AssetDetailResponse)
+@router.get(
+    "/{asset_id}",
+    response_model=AssetDetailResponse,
+    dependencies=[Depends(check_permission("read", "asset"))]
+)
 async def get_asset(
     asset_id: UUID,
     db: AsyncSession = Depends(get_db),
@@ -663,7 +677,11 @@ async def get_asset(
     }
 
 
-@router.put("/{asset_id}", response_model=AssetResponse)
+@router.put(
+    "/{asset_id}",
+    response_model=AssetResponse,
+    dependencies=[Depends(check_permission("update", "asset"))]
+)
 async def update_asset(
     asset_id: UUID,
     asset_update: AssetUpdate,
@@ -725,7 +743,11 @@ async def update_asset(
     }
 
 
-@router.delete("/{asset_id}", status_code=204)
+@router.delete(
+    "/{asset_id}",
+    status_code=204,
+    dependencies=[Depends(check_permission("delete", "asset"))]
+)
 async def delete_asset(
     asset_id: UUID,
     db: AsyncSession = Depends(get_db),

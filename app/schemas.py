@@ -123,7 +123,7 @@ TARGET_TYPE = Literal["ip", "hostname"]
 PERFORMANCE_PROTOCOL = Literal["icmp", "http", "https"]
 
 # Circuit type options for Availability monitors
-CIRCUIT_TYPE = Literal["dia", "broadband"]
+CIRCUIT_TYPE = Literal[ "broadband", "dia"]
 
 # Check interval options (in seconds)
 PERFORMANCE_INTERVAL = Literal[60, 300, 900]  # 1min, 5min, 15min

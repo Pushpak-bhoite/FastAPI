@@ -1,15 +1,12 @@
 from fastapi import APIRouter
 
-from app.api.routers import users, posts, assets, organizations
+from app.api.routers import users, posts, assets
 from app.core.config import settings
 
 api_router = APIRouter()
 
 # User management routes (registration, login, etc.)
 api_router.include_router(users.router)
-
-# Organization management routes (CRUD with Permit.io authorization)
-api_router.include_router(organizations.router)
 
 # Asset management routes
 api_router.include_router(assets.router)

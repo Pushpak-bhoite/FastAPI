@@ -28,7 +28,7 @@ from sqlalchemy import select
 
 from app.core.db import User, Organization, get_db
 from app.users import current_active_user
-from app.core.permit_service import check_permission, check_organization_permission
+from app.core.permit_service import check_permitio_permission, check_organization_permission
 
 
 # =============================================================================
@@ -69,6 +69,30 @@ async def get_user_organization(
 # =============================================================================
 # PERMISSION DEPENDENCY FACTORIES
 # =============================================================================
+
+def check_permission(action: str, resource: str):
+    """
+    Permission checker dependency (Node-style pattern).
+    
+    Usage:
+        @router.post("/", dependencies=[Depends(check_permission("create", "asset"))])
+        @router.delete("/{id}", dependencies=[Depends(check_permission("delete", "asset"))])
+    """
+    async def checker(user: User = Depends(current_active_user)):
+        # user.id IS the tenant (user IS the org)
+        permitted = await check_permitio_permission(
+            user_id=str(user.id),
+            action=action,
+            resource=resource,
+            tenant_id=str(user.id)
+        )
+        if not permitted:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"No permission to {action} {resource}"
+            )
+    return checker
+
 
 def require_permission(resource: str, action: str):
     """
@@ -111,7 +135,7 @@ def require_permission(resource: str, action: str):
         tenant_id = str(organization.id) if organization else None
         
         # Check permission with Permit.io
-        permitted = await check_permission(
+        permitted = await check_permitio_permission(
             user_id=str(user.id),
             action=action,
             resource=resource,
@@ -248,7 +272,7 @@ class PermissionChecker:
         Returns:
             True if permitted, False otherwise
         """
-        return await check_permission(
+        return await check_permitio_permission(
             user_id=self.user_id,
             action=action,
             resource=resource,

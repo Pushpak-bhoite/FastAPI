@@ -171,7 +171,7 @@ async def remove_user_from_permit(user_id: str) -> bool:
 # PERMISSION CHECK FUNCTIONS
 # =============================================================================
 
-async def check_permission(
+async def check_permitio_permission(
     user_id: str,
     action: str,
     resource: str,
@@ -195,7 +195,7 @@ async def check_permission(
         
     Example:
         # Check if user can create an asset
-        allowed = await check_permission(
+        allowed = await check_permitio_permission(
             user_id="user-123",
             action="create",
             resource="asset",
@@ -255,7 +255,7 @@ async def check_organization_permission(
         True if permitted, False otherwise
     """
     # First, check basic Permit.io permission
-    basic_permission = await check_permission(
+    basic_permission = await check_permitio_permission(
         user_id=user_id,
         action=action,
         resource="organization",
@@ -279,7 +279,7 @@ async def check_organization_permission(
     if user_organization_type == "reseller":
         # This would need to check if target_organization is a child
         # For now, we'll handle this with resource attributes
-        return await check_permission(
+        return await check_permitio_permission(
             user_id=user_id,
             action=action,
             resource="organization",
