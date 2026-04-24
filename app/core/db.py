@@ -135,7 +135,7 @@ class Post(Base):
 class User(SQLAlchemyBaseUserTableUUID, Base):
     """
     User model extending fastapi-users base.
-    Contains relationships to all user-owned resources.
+    also represents an organization (user IS the organization).
     
     Now includes organization membership for multi-tenant RBAC.
     The user's permissions are determined by their organization's type.
@@ -148,7 +148,22 @@ class User(SQLAlchemyBaseUserTableUUID, Base):
         nullable=True,  # Nullable initially - can be set after user creation
         comment="Organization this user belongs to"
     )
-    organization = relationship("Organization", back_populates="users")
+    # User's display name (also used as organization_name)
+    name = Column(String, nullable=False, default="")
+    # Default always as customer of super admin
+    organization_type = Column(
+        String, 
+        nullable=False, 
+        default="customer", 
+        index=True,
+        comment="One of: assetwatch, customer, reseller, reseller_customer" )
+    parent_organization_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("user.id"),
+        nullable=True
+    )
+
+    # organization = relationship("Organization", back_populates="users")
     
     # Existing relationships
     File_Posts = relationship("FilePost", back_populates="user")

@@ -176,7 +176,7 @@ async def create_organization(
 
     # Check basic create permission via Permit.io
     print("Check ----> ",await checker.can("create", "Organization"))
-    if not await checker.can("create", "Organization"):
+    if not await checker.can("create", "organization"):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You don't have permission to create organizations"
@@ -187,6 +187,136 @@ async def create_organization(
     # AssetWatch (super admin) can create anything
     if checker.is_assetwatch():
         pass  # All good, proceed
+    
+    # Resellers can only create reseller_customer type
+    elif checker.is_reseller():
+        if org_data.organization_type != "reseller_customer":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Resellers can only create reseller_customer organizations"
+            )
+        # Auto-set parent to the reseller's organization
+        # This ensures reseller_customers are always linked to their parent reseller
+        org_data.parent_organization_id = user_org.id
+    
+    # Customers and reseller_customers cannot create organizations
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You don't have permission to create organizations"
+        )
+    
+    # === BUSINESS VALIDATION ===
+    
+    # Validate that reseller_customer has parent_organization_id
+    if org_data.organization_type == "reseller_customer":
+        if not org_data.parent_organization_id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="reseller_customer must have a parent_organization_id"
+            )
+        
+        # Verify parent is actually a reseller
+        parent_result = await db.execute(
+            select(Organization).where(Organization.id == org_data.parent_organization_id)
+        )
+        parent = parent_result.scalars().first()
+        
+        if not parent:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Parent organization not found"
+            )
+        
+        if parent.organization_type != "reseller":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Parent organization must be a reseller"
+            )
+    
+    # Only one assetwatch organization can exist
+    if org_data.organization_type == "assetwatch":
+        existing_assetwatch = await db.execute(
+            select(Organization).where(Organization.organization_type == "assetwatch")
+        )
+        if existing_assetwatch.scalars().first():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Only one assetwatch organization can exist"
+            )
+    
+    # Check email uniqueness
+    existing_email = await db.execute(
+        select(Organization).where(Organization.organization_email == org_data.organization_email)
+    )
+    if existing_email.scalars().first():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Organization with this email already exists"
+        )
+    
+    # === CREATE ORGANIZATION ===
+    
+    db_org = Organization(
+        organization_type=org_data.organization_type,
+        organization_name=org_data.organization_name,
+        organization_email=org_data.organization_email,
+        parent_organization_id=org_data.parent_organization_id
+    )
+    
+    db.add(db_org)
+    await db.commit()
+    await db.refresh(db_org)
+    
+    # Sync to Permit.io so it knows about this organization (tenant)
+    await sync_organization_to_permit(
+        organization_id=str(db_org.id),
+        organization_type=db_org.organization_type,
+        organization_name=db_org.organization_name
+    )
+    
+    return org_to_response(db_org)
+
+@router.post("/customer", response_model=OrganizationResponse, status_code=status.HTTP_201_CREATED)
+async def create_organization(
+    org_data: OrganizationCreate,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(current_active_user),
+    user_org: Optional[Organization] = Depends(get_user_organization)
+):
+    """
+    Create a new organization.
+    
+    Authorization Rules:
+    - assetwatch: Can create any organization type
+    - reseller: Can only create 'reseller_customer' (their own customers)
+    - customer/reseller_customer: Cannot create organizations
+    
+    Business Rules:
+    - Only one 'assetwatch' organization can exist
+    - 'reseller_customer' MUST have parent_organization_id (the reseller's ID)
+    - Email must be unique across all organizations
+    - When reseller creates reseller_customer, parent_organization_id auto-set to reseller's org
+    
+    Returns:
+        The created organization
+        
+    Raises:
+        403: If user doesn't have permission to create organizations
+        400: If business rules are violated
+    """
+    # Initialize permission checker with user and their organization
+    checker = PermissionChecker(user, user_org)
+
+    # Check basic create permission via Permit.io
+    print("Check ----> ",await checker.can("create", "Organization"))
+    if not await checker.can("create", "organization"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You don't have permission to create organizations"
+        )
+    
+    # === AUTHORIZATION LOGIC BASED ON ORG TYPE ===
     
     # Resellers can only create reseller_customer type
     elif checker.is_reseller():

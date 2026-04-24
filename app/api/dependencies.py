@@ -228,8 +228,8 @@ class PermissionChecker:
         self.user = user
         self.organization = organization
         self.user_id = str(user.id)
-        self.tenant_id = str(organization.id) if organization else None
-        self.org_type = organization.organization_type if organization else None
+        self.tenant_id = str(user.id)
+        self.org_type = user.organization_type if organization else None
     
     async def can(
         self, 

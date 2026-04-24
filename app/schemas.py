@@ -55,17 +55,21 @@ class FilePost(BaseModel):
 
 class UserRead(schemas.BaseUser[uuid.UUID]):
     """Schema for reading user data"""
-    pass
+    name: str
+    organization_type: str
+    parent_organization_id: Optional[uuid.UUID] = None
+
 
 
 class UserCreate(schemas.BaseUserCreate):
     """Schema for creating a user"""
-    pass
+    name: str  # Required: used as organization name
+
 
 
 class UserUpdate(schemas.BaseUserUpdate):
     """Schema for updating a user"""
-    pass
+    name: Optional[str] = None
 
 
 # ==================== ASSETWATCH TYPE DEFINITIONS ====================
