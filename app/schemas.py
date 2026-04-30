@@ -64,6 +64,7 @@ class UserRead(schemas.BaseUser[uuid.UUID]):
 class UserCreate(schemas.BaseUserCreate):
     """Schema for creating a user"""
     name: str  # Required: used as organization name
+    organization_type: str = "customer"  # Default to customer for self-registration
 
 
 

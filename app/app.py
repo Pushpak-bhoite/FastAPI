@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException, Depends, File, Form, UploadFile 
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.ext.asyncio import AsyncSession
 from contextlib import asynccontextmanager
 from sqlalchemy import select
@@ -19,6 +20,15 @@ app = FastAPI(lifespan=lifespan,
             docs_url="/api/docs",  #these extra 2 lines are for updating faastapi's docs with base endpoint /api since defauld start with just / 
             openapi_url="/api/openapi.json"
             )
+
+# Configure CORS - allow frontend to make requests
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.all_cors_origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 

@@ -197,6 +197,37 @@ wheels = [
 ]
 
 [[package]]
+name = "assetwatch-backend"
+version = "0.1.0"
+source = { virtual = "." }
+dependencies = [
+    { name = "aiosqlite" },
+    { name = "fastapi" },
+    { name = "fastapi-users", extra = ["sqlalchemy"] },
+    { name = "httpx" },
+    { name = "imagekitio" },
+    { name = "logger" },
+    { name = "permit" },
+    { name = "pydantic-settings" },
+    { name = "python-dotenv" },
+    { name = "uvicorn", extra = ["standard"] },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "aiosqlite", specifier = ">=0.22.1" },
+    { name = "fastapi", specifier = ">=0.135.3" },
+    { name = "fastapi-users", extras = ["sqlalchemy"], specifier = ">=15.0.5" },
+    { name = "httpx", specifier = ">=0.24.0" },
+    { name = "imagekitio", specifier = ">=5.3.0" },
+    { name = "logger", specifier = ">=1.4" },
+    { name = "permit", specifier = ">=2.8.3" },
+    { name = "pydantic-settings", specifier = ">=2.13.1" },
+    { name = "python-dotenv", specifier = ">=1.2.2" },
+    { name = "uvicorn", extras = ["standard"], specifier = ">=0.44.0" },
+]
+
+[[package]]
 name = "attrs"
 version = "26.1.0"
 source = { registry = "https://pypi.org/simple" }
@@ -719,37 +750,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/59/c4/cb37ece4a85e1c0a4e76d447a55e5c603902d21f11d68ae74572d946c3b9/imagekitio-5.3.0.tar.gz", hash = "sha256:4cec786b5a9a1ee37943b23bbda67b0fc33e1e8c3203062bb4ae4761c7e7ce66", size = 240925, upload-time = "2026-04-06T07:37:41.805Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/f1/a2/c287ffad821ac84c8961aa9fded54e2535c5cfa54be73e93b3332988e668/imagekitio-5.3.0-py3-none-any.whl", hash = "sha256:6254c8a33ac38a3a4f648b3b10be4a98dafb6cf595585129c17ec6ce886d3780", size = 266803, upload-time = "2026-04-06T07:37:40.425Z" },
-]
-
-[[package]]
-name = "learnpython"
-version = "0.1.0"
-source = { virtual = "." }
-dependencies = [
-    { name = "aiosqlite" },
-    { name = "fastapi" },
-    { name = "fastapi-users", extra = ["sqlalchemy"] },
-    { name = "httpx" },
-    { name = "imagekitio" },
-    { name = "logger" },
-    { name = "permit" },
-    { name = "pydantic-settings" },
-    { name = "python-dotenv" },
-    { name = "uvicorn", extra = ["standard"] },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "aiosqlite", specifier = ">=0.22.1" },
-    { name = "fastapi", specifier = ">=0.135.3" },
-    { name = "fastapi-users", extras = ["sqlalchemy"], specifier = ">=15.0.5" },
-    { name = "httpx", specifier = ">=0.24.0" },
-    { name = "imagekitio", specifier = ">=5.3.0" },
-    { name = "logger", specifier = ">=1.4" },
-    { name = "permit", specifier = ">=2.8.3" },
-    { name = "pydantic-settings", specifier = ">=2.13.1" },
-    { name = "python-dotenv", specifier = ">=1.2.2" },
-    { name = "uvicorn", extras = ["standard"], specifier = ">=0.44.0" },
 ]
 
 [[package]]
