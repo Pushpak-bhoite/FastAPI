@@ -1,4 +1,7 @@
 # lambda arguments: expression
+# Its small, anonymous function
+# dont need to formally define a function name
+# Used as arguments for map(), filter(), sort(), sorted()
 
 def square(x):
     return x * x 
