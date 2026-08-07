@@ -22,6 +22,7 @@ Organization Types & Permissions:
 - reseller_customer: Reseller's customer - can read/update self only
 """
 
+import os
 import uuid
 from datetime import datetime
 from collections.abc import AsyncGenerator
@@ -33,10 +34,11 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sess
 from sqlalchemy.orm import DeclarativeBase, relationship
 # For user authentication
 from fastapi_users.db import SQLAlchemyUserDatabase, SQLAlchemyBaseUserTableUUID
+from dotenv import load_dotenv
 
-
+load_dotenv()
 # Async SQLite URL
-DATABASE_URL = "sqlite+aiosqlite:///./test.db"
+DATABASE_URL = os.getenv["DATABASE_URL"]
 
 # Engine with echo=False to disable SQL logging
 engine = create_async_engine(DATABASE_URL, echo=False)
@@ -465,7 +467,6 @@ class MonitorIncident(Base):
     
     # Relationship
     monitor = relationship("StandaloneMonitor", back_populates="incidents")
-
     
 # call this on app startup
 async def create_db_and_tables():
