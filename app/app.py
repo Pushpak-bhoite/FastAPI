@@ -44,7 +44,7 @@ async def lifespan(app: FastAPI):
             print(f"⚠️ Failed to stop worker scheduler: {e}")
 # ================================================
 
-app = FastAPI(lifespan=lifespan,
+app = FastAPI(lifespan=lifespan, # on edit & save lifespan function gets triggered.  
             docs_url="/api/docs",  #these extra 2 lines are for updating faastapi's docs with base endpoint /api since defauld start with just / 
             openapi_url="/api/openapi.json"
             )

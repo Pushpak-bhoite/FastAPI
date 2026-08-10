@@ -38,7 +38,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 # Async SQLite URL
-DATABASE_URL = os.getenv["DATABASE_URL"]
+DATABASE_URL = os.getenv("DATABASE_URL")
 
 # Engine with echo=False to disable SQL logging
 engine = create_async_engine(DATABASE_URL, echo=False)

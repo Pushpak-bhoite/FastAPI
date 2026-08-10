@@ -18,7 +18,6 @@ from datetime import datetime
 
 from worker.scheduler import create_scheduler, start_scheduler, shutdown_scheduler
 
-
 async def main():
     """Main entry point for the monitoring worker."""
     print(f"[{datetime.now().isoformat()}] Starting AssetWatch Monitoring Worker...")
@@ -53,7 +52,6 @@ async def main():
         print(f"[{datetime.now().isoformat()}] Shutting down worker...")
         shutdown_scheduler(scheduler)
         print(f"[{datetime.now().isoformat()}] Worker stopped.")
-
 
 if __name__ == "__main__":
     try:
