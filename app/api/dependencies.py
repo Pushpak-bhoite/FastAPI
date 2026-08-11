@@ -80,6 +80,7 @@ def check_permission(action: str, resource: str):
     """
     async def checker(user: User = Depends(current_active_user)):
         # user.id IS the tenant (user IS the org)
+        print("resource->", resource)
         permitted = await check_permitio_permission(
             user_id=str(user.id),
             action=action,

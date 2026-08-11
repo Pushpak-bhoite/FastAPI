@@ -25,7 +25,7 @@ router = APIRouter(prefix="/users", tags=["users-list"])
 
 @router.get("/list",
             response_model=PaginatedUsersResponse,
-            dependencies=[Depends(check_permission("read", "asset"))]
+            dependencies=[Depends(check_permission("read", "users"))]
             )
 async def list_users(
     page: int = Query(1, ge=1, description="Page number (1-indexed)"),
