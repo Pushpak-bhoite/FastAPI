@@ -52,7 +52,6 @@ def validate_image(file: UploadFile) -> None:
             detail=f"File too large. Maximum size is {MAX_FILE_SIZE // (1024 * 1024)}MB"
         )
 
-
 @router.post("/image")
 async def upload_profile_image(
     file: UploadFile = File(...),
