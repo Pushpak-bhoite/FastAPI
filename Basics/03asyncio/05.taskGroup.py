@@ -2,7 +2,8 @@
 # Both gather() and TaskGroup are used for concurrency.
 # here we dont have return_exception=True avoid crash. but if u have try/except then can avoid crash 
 import asyncio
-
+# *** Def = Dependency Injection = giving an object the dependencies it needs from 
+# the outside instead of making the object create those dependencies itself.
 import aiohttp
 # To avoid crash, use try except or return_exception=True
 
@@ -49,3 +50,4 @@ asyncio.run(main())
 
 # there is also one more concepts like :
 # future, lock, semphore (https://app.notion.com/p/Core-Python-1-3be716bf2b2c8048ac97cf91f81ccfab)
+

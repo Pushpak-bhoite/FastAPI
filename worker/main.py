@@ -32,9 +32,9 @@ async def main():
         print(f"\n[{datetime.now().isoformat()}] Received shutdown signal ({sig})")
         shutdown_event.set()
     
-    # Register signal handlers
-    signal.signal(signal.SIGINT, signal_handler)
-    signal.signal(signal.SIGTERM, signal_handler)
+    # Register signal handlers( helps to provide os level signals- inter-process communication)
+    signal.signal(signal.SIGINT, signal_handler) # ctrl + c 
+    signal.signal(signal.SIGTERM, signal_handler) # triggered by kill cmd   
     
     try:
         # Start scheduler
