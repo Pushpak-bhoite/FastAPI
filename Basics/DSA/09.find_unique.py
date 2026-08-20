@@ -16,3 +16,14 @@ for key, value in b.items():
         
 print(uniq)
     
+# ==========================
+# if u want to modify dict then use "list(b.items())" iterator 
+# list(b.items()) creates a snapshot of the dictionary's items. 
+seen = set()
+for key, value in list(b.items()): # u can't get Runtime size modification error. 
+    if value in seen:
+        del b[key]
+    else:
+        seen.add(value)
+print(b)
+
