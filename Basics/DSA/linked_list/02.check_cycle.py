@@ -16,13 +16,13 @@ ll4 = ListNode(40)
 ll1.next = ll2
 ll2.next = ll3
 ll3.next = ll4
-ll4.next = ll1
+# ll4.next = ll1
 # [10,20,30]
-def print_ll(head:ListNode):
+# def print_ll(head:ListNode):
     
-    while head != None:
-        print("n->", head.val) 
-        head = head.next
+#     while head != None:
+#         print("n->", head.val) 
+#         head = head.next
     
 class Solution:
     def hasCycle(self, head: Optional[ListNode]) -> bool:
@@ -38,5 +38,5 @@ class Solution:
         return False            
     
 sol = Solution()
-print_ll(ll1)
+# print_ll(ll1) #it goes in infinite loop 
 print(sol.hasCycle(ll1))
